@@ -13,6 +13,7 @@ import {
   Loader2,
   FileSpreadsheet,
   X,
+  Menu,
   BookOpen,
   Download,
   Bug,
@@ -34,13 +35,15 @@ import ShortcutGuide from './components/ShortcutGuide';
 import FormulaDebugger from './components/FormulaDebugger';
 import SavedTemplates from './components/SavedTemplates';
 import FormattingGuide from './components/FormattingGuide';
-import { ModalOverlay, ClearButton } from './components/Common';
+import { ModalOverlay, ClearButton, CopyButton } from './components/Common';
 import { saveTemplate } from './data/templates';
+import { exportFormulaToExcel } from './lib/excelExport';
 
 type AppView = 'architect' | 'shortcuts' | 'debugger' | 'templates' | 'formatting';
 
 export default function App() {
   const [view, setView] = useState<AppView>('architect');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('xl_theme') as 'light' | 'dark' || 'light';
@@ -53,7 +56,6 @@ export default function App() {
   const [history, setHistory] = useState<ExcelSolution[]>([]);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const [debugTarget, setDebugTarget] = useState<string>('');
-  const [copyStatus, setCopyStatus] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -63,12 +65,6 @@ export default function App() {
     setTimeout(() => {
       handleSubmit();
     }, 0);
-  };
-
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopyStatus(id);
-    setTimeout(() => setCopyStatus(null), 2000);
   };
 
   const handleSaveTemplate = () => {
@@ -179,68 +175,92 @@ ${solution.proTip}
       />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="bg-[#217346] p-2 rounded-lg shadow-lg shadow-[#217346]/20 cursor-pointer" onClick={() => setView('architect')}>
-            <Cpu className="w-6 h-6 text-white" />
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 py-4 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="bg-[#217346] p-2 rounded-lg shadow-lg shadow-[#217346]/20 cursor-pointer" onClick={() => { setView('architect'); setIsMenuOpen(false); }}>
+            <Cpu className="w-5 h-5 md:w-6 md:h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-800 dark:text-white">XL-ARCHITECT</h1>
-            <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#217346] dark:text-[#28a162] font-bold">World Class Excel Intelligence</p>
+            <h1 className="text-lg md:text-xl font-bold tracking-tight text-slate-800 dark:text-white leading-none">XL-ARCHITECT</h1>
+            <p className="text-[8px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[#217346] dark:text-[#28a162] font-bold">World Class Excel Intelligence</p>
           </div>
         </div>
         
-        <div className="hidden md:flex items-center gap-4">
-          {/* Navigation Toggle */}
-          <div className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex gap-1 mr-2">
-            <button 
-              onClick={() => setView('architect')}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${view === 'architect' ? 'bg-white dark:bg-slate-700 shadow-sm text-[#217346] dark:text-white' : 'text-slate-400 hover:text-slate-600 dark:text-slate-500'}`}
-            >
-              <Command className="w-3.5 h-3.5" />
-              Architect
-            </button>
-            <button 
-              onClick={() => setView('shortcuts')}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${view === 'shortcuts' ? 'bg-white dark:bg-slate-700 shadow-sm text-[#217346] dark:text-white' : 'text-slate-400 hover:text-slate-600 dark:text-slate-500'}`}
-            >
-              <Keyboard className="w-3.5 h-3.5" />
-              Repository
-            </button>
-            <button 
-              onClick={() => setView('debugger')}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${view === 'debugger' ? 'bg-white dark:bg-slate-700 shadow-sm text-[#217346] dark:text-white' : 'text-slate-400 hover:text-slate-600 dark:text-slate-500'}`}
-            >
-              <Bug className="w-3.5 h-3.5" />
-              Debugger
-            </button>
-            <button 
-              onClick={() => setView('templates')}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${view === 'templates' ? 'bg-white dark:bg-slate-700 shadow-sm text-[#217346] dark:text-white' : 'text-slate-400 hover:text-slate-600 dark:text-slate-500'}`}
-            >
-              <Layers className="w-3.5 h-3.5" />
-              Templates
-            </button>
-            <button 
-              onClick={() => setView('formatting')}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${view === 'formatting' ? 'bg-white dark:bg-slate-700 shadow-sm text-[#217346] dark:text-white' : 'text-slate-400 hover:text-slate-600 dark:text-slate-500'}`}
-            >
-              <Palette className="w-3.5 h-3.5" />
-              Conditioning
-            </button>
+        <div className="flex items-center gap-2 md:gap-4">
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mr-2">
+            {[
+              { id: 'architect', label: 'Architect', icon: Command },
+              { id: 'shortcuts', label: 'Repository', icon: Keyboard },
+              { id: 'debugger', label: 'Debugger', icon: Bug },
+              { id: 'templates', label: 'Templates', icon: Layers },
+              { id: 'formatting', label: 'Conditioning', icon: Palette }
+            ].map((nav) => (
+              <button 
+                key={nav.id}
+                onClick={() => setView(nav.id as AppView)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${view === nav.id ? 'bg-white dark:bg-slate-700 shadow-sm text-[#217346] dark:text-white' : 'text-slate-400 hover:text-slate-600 dark:text-slate-500'}`}
+              >
+                <nav.icon className="w-3.5 h-3.5" />
+                {nav.label}
+              </button>
+            ))}
           </div>
 
-          <div className="flex items-center ml-2">
+          <div className="flex items-center gap-2">
             <button 
               onClick={toggleTheme}
               className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-[#217346] dark:hover:text-green-500 transition-all border border-slate-200 dark:border-slate-700 shadow-sm"
               aria-label="Toggle Theme"
             >
-              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+              {theme === 'light' ? <Moon className="w-4 h-4 text-slate-600" /> : <Sun className="w-4 h-4 text-yellow-400" />}
+            </button>
+            
+            {/* Hamburger Menu Trigger */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-[#217346] dark:hover:text-green-500 transition-all border border-slate-200 dark:border-slate-700 shadow-sm"
+              aria-label="Toggle Mobile Menu"
+            >
+              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
       </header>
+
+      {/* Mobile Navigation Menu */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="lg:hidden sticky top-[73px] z-[45] bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden"
+          >
+            <div className="p-4 grid grid-cols-2 gap-2">
+              {[
+                { id: 'architect', label: 'Architect', icon: Command, color: 'bg-green-50 dark:bg-green-950/30' },
+                { id: 'shortcuts', label: 'Repository', icon: Keyboard, color: 'bg-blue-50 dark:bg-blue-950/30' },
+                { id: 'debugger', label: 'Debugger', icon: Bug, color: 'bg-red-50 dark:bg-red-950/30' },
+                { id: 'templates', label: 'Templates', icon: Layers, color: 'bg-emerald-50 dark:bg-emerald-950/30' },
+                { id: 'formatting', label: 'Conditioning', icon: Palette, color: 'bg-indigo-50 dark:bg-indigo-950/30' }
+              ].map((nav) => (
+                <button
+                  key={nav.id}
+                  onClick={() => {
+                    setView(nav.id as AppView);
+                    setIsMenuOpen(false);
+                  }}
+                  className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all gap-2 ${view === nav.id ? 'border-[#217346] bg-[#217346]/10 text-[#217346] dark:text-green-400' : 'border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-200 dark:hover:border-slate-700'}`}
+                >
+                  <nav.icon className="w-5 h-5" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">{nav.label}</span>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main className="max-w-4xl mx-auto px-6 py-12 relative z-10">
         <AnimatePresence mode="wait">
@@ -320,10 +340,10 @@ ${solution.proTip}
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="e.g., How do I highlight cells that are higher than average?"
-                    className="w-full bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl py-6 pl-14 pr-48 text-lg dark:text-white shadow-xl shadow-slate-200/50 dark:shadow-slate-950/50 focus:border-[#217346] focus:ring-0 transition-all outline-none"
+                    placeholder="Describe your excel goal..."
+                    className="w-full bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl py-4 md:py-6 pl-12 md:pl-14 pr-14 sm:pr-40 md:pr-48 text-base md:text-lg dark:text-white shadow-xl shadow-slate-200/50 dark:shadow-slate-950/50 focus:border-[#217346] focus:ring-0 transition-all outline-none"
                   />
-                  <div className="absolute right-[11rem] inset-y-0 flex items-center">
+                  <div className="absolute right-14 sm:right-[10.5rem] md:right-[11rem] inset-y-0 flex items-center">
                     <ClearButton 
                       isVisible={input.length > 0} 
                       onClick={() => {
@@ -335,16 +355,16 @@ ${solution.proTip}
                   <button
                     type="submit"
                     disabled={loading || !input.trim()}
-                    className="absolute right-3 inset-y-3 px-6 bg-[#217346] text-white rounded-xl font-bold flex items-center gap-2 hover:bg-[#1a5c38] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#217346]/20 min-w-[140px] justify-center"
+                    className="absolute right-2 md:right-3 inset-y-2 md:inset-y-3 px-3 md:px-6 bg-[#217346] text-white rounded-xl font-bold flex items-center gap-2 hover:bg-[#1a5c38] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#217346]/20 min-w-[44px] sm:min-w-[140px] justify-center"
                   >
                     {loading ? (
                       <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <Loader2 className="w-4 md:w-5 h-4 md:h-5 animate-spin" />
                         <span className="hidden sm:inline">PROCESSING...</span>
                       </>
                     ) : (
                       <>
-                        <ArrowRight className="w-5 h-5" />
+                        <ArrowRight className="w-4 md:w-5 h-4 md:h-5" />
                         <span className="hidden sm:inline">ANALYZE</span>
                       </>
                     )}
@@ -442,20 +462,24 @@ ${solution.proTip}
                               <div className="font-mono text-xl bg-slate-900 border border-slate-800 p-4 pr-16 rounded-xl text-green-400 break-all shadow-inner overflow-x-auto selection:bg-green-500/30 min-h-[4rem] flex items-center">
                                 {solution.solution}
                               </div>
-                              <div className="absolute right-2 top-2 flex flex-col gap-2 opacity-0 group-hover/formula:opacity-100 transition-opacity">
+                              <div className="absolute right-2 top-2 flex flex-col gap-2 opacity-100 md:opacity-0 md:group-hover/formula:opacity-100 transition-opacity">
+                                <CopyButton 
+                                  text={solution.solution} 
+                                  className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors shadow-lg border border-slate-700 flex items-center justify-center"
+                                />
                                 <button
-                                  onClick={() => copyToClipboard(solution.solution, 'formula')}
-                                  className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors shadow-lg border border-slate-700"
-                                  title="Copy Formula"
+                                  onClick={() => exportFormulaToExcel(solution.solution, `Formula-${solution.goal.slice(0, 20)}.xlsx`)}
+                                  className="p-2 bg-green-800 hover:bg-green-700 text-green-100 rounded-lg transition-colors shadow-lg border border-green-700 flex items-center justify-center"
+                                  title="Export to Excel"
                                 >
-                                  {copyStatus === 'formula' ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                                  <FileSpreadsheet className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() => {
                                     setDebugTarget(solution.solution);
                                     setView('debugger');
                                   }}
-                                  className="p-2 bg-[#217346] hover:bg-[#1a5c38] text-white rounded-lg transition-colors shadow-lg border border-[#1a5c38]"
+                                  className="p-2 bg-[#217346] hover:bg-[#1a5c38] text-white rounded-lg transition-colors shadow-lg border border-[#1a5c38] flex items-center justify-center"
                                   title="Analyze in Debugger"
                                 >
                                   <ExternalLink className="w-4 h-4" />

@@ -69,19 +69,19 @@ export function ModalOverlay({ isOpen, onClose, children }: ModalOverlayProps) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 md:p-8">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-0 sm:p-4 md:p-8">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto no-scrollbar rounded-[2.5rem] shadow-2xl"
+            className="relative w-full max-w-5xl h-full sm:h-auto max-h-screen sm:max-h-[90vh] overflow-y-auto no-scrollbar sm:rounded-[2.5rem] shadow-2xl bg-white dark:bg-slate-900"
           >
             {children}
           </motion.div>

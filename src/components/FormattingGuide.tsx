@@ -11,10 +11,12 @@ import {
   CheckCircle2,
   AlertCircle,
   ExternalLink,
+  FileSpreadsheet,
   X
 } from 'lucide-react';
 import { getConditionalFormattingGuidance, type ConditionalFormattingSolution } from '../services/gemini';
 import { ClearButton, CopyButton } from './Common';
+import { exportFormulaToExcel } from '../lib/excelExport';
 
 interface FormattingGuideProps {
   onDebug?: (formula: string) => void;
@@ -46,20 +48,20 @@ export default function FormattingGuide({ onDebug, onClose }: FormattingGuidePro
     <div className="w-full max-w-5xl">
        <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden min-h-[60vh] flex flex-col transition-colors">
         {/* Header Section */}
-        <div className="bg-indigo-900 dark:bg-indigo-950 p-8 md:p-12 text-white relative overflow-hidden transition-colors">
-          <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none">
+        <div className="bg-indigo-900 dark:bg-indigo-950 p-6 md:p-12 text-white relative overflow-hidden transition-colors">
+          <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none hidden md:block">
             <Palette className="w-64 h-64" />
           </div>
           
           <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-4">
-                <div className="bg-[#217346] p-3 rounded-2xl shadow-lg shadow-[#217346]/20">
-                  <Palette className="w-8 h-8 text-white" />
+            <div className="flex items-center justify-between mb-4 md:mb-8">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="bg-[#217346] p-2 md:p-3 rounded-2xl shadow-lg shadow-[#217346]/20">
+                  <Palette className="w-6 h-6 md:w-8 md:h-8 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-3xl font-black tracking-tight">Logic & Style</h2>
-                  <p className="text-indigo-200 font-medium tracking-wide">Dynamic conditioning for intelligent spreadsheets.</p>
+                  <h2 className="text-xl md:text-3xl font-black tracking-tight">Logic & Style</h2>
+                  <p className="text-indigo-200 text-xs md:text-sm font-medium tracking-wide">Dynamic conditioning for intelligent spreadsheets.</p>
                 </div>
               </div>
               {onClose && (
@@ -68,24 +70,24 @@ export default function FormattingGuide({ onDebug, onClose }: FormattingGuidePro
                   className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all backdrop-blur-md"
                   aria-label="Close Conditioning"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5 md:w-6 md:h-6" />
                 </button>
               )}
             </div>
 
-            <form onSubmit={handleSubmit} className="mt-8 relative max-w-3xl">
-              <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
-                <Search className="w-5 h-5 text-indigo-300" />
+            <form onSubmit={handleSubmit} className="mt-4 md:mt-8 relative max-w-3xl">
+              <div className="absolute inset-y-0 left-0 pl-4 md:pl-6 flex items-center pointer-events-none">
+                <Search className="w-4 h-4 md:w-5 md:h-5 text-indigo-300" />
               </div>
               <input
                 ref={inputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="e.g., Highlight rows where Profit is less than 10% of Sales..."
-                className="w-full bg-indigo-950/40 backdrop-blur-md border-2 border-indigo-200/20 rounded-2xl py-5 pl-14 pr-48 text-lg text-white placeholder:text-indigo-300/50 focus:border-white transition-all outline-none shadow-xl"
+                placeholder="Describe highlight logic..."
+                className="w-full bg-indigo-950/40 backdrop-blur-md border-2 border-indigo-200/20 rounded-2xl py-4 md:py-5 pl-12 md:pl-14 pr-32 md:pr-48 text-sm md:text-lg text-white placeholder:text-indigo-300/50 focus:border-white transition-all outline-none shadow-xl"
               />
-              <div className="absolute right-[8.5rem] inset-y-0 flex items-center">
+              <div className="absolute right-24 md:right-[8.5rem] inset-y-0 flex items-center">
                 <ClearButton 
                   isVisible={input.length > 0} 
                   onClick={() => {
@@ -97,16 +99,16 @@ export default function FormattingGuide({ onDebug, onClose }: FormattingGuidePro
               <button
                 type="submit"
                 disabled={loading || !input.trim()}
-                className="absolute right-3 inset-y-3 px-6 bg-[#217346] text-white rounded-xl font-bold flex items-center gap-2 hover:bg-[#1a5c38] transition-all disabled:opacity-50 min-w-[120px] justify-center"
+                className="absolute right-2 md:right-3 inset-y-2 md:inset-y-3 px-4 md:px-6 bg-[#217346] text-white rounded-xl font-bold flex items-center gap-2 hover:bg-[#1a5c38] transition-all disabled:opacity-50 min-w-[80px] md:min-w-[120px] justify-center text-xs md:text-base border border-[#1a5c38]"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" />
                     <span className="hidden sm:inline">PROCESSING...</span>
                   </>
                 ) : (
                   <>
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
                     <span className="hidden sm:inline">PROCESS</span>
                   </>
                 )}
@@ -116,7 +118,7 @@ export default function FormattingGuide({ onDebug, onClose }: FormattingGuidePro
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 p-8 md:p-12 bg-slate-50/50 dark:bg-slate-900/50 transition-colors">
+        <div className="flex-1 p-6 md:p-12 bg-slate-50/50 dark:bg-slate-900/50 transition-colors">
           <AnimatePresence mode="wait">
             {result ? (
               <motion.div
@@ -177,15 +179,22 @@ export default function FormattingGuide({ onDebug, onClose }: FormattingGuidePro
                                         <div className="bg-indigo-900/40 border border-indigo-800 p-4 pr-16 rounded-xl font-mono text-lg text-white break-all shadow-inner">
                                             {result.formula}
                                         </div>
-                                        <div className="absolute right-2 top-2 flex flex-col gap-2 opacity-0 group-hover/formula:opacity-100 transition-opacity">
+                                        <div className="absolute right-2 top-2 flex flex-col gap-2 opacity-100 md:opacity-0 md:group-hover/formula:opacity-100 transition-opacity">
                                             <CopyButton 
                                               text={result.formula!} 
-                                              className="p-2 bg-indigo-800 hover:bg-indigo-700 text-indigo-200 rounded-lg transition-colors border border-indigo-700 shadow-lg"
+                                              className="p-2 bg-indigo-800 hover:bg-indigo-700 text-indigo-200 rounded-lg transition-colors border border-indigo-700 shadow-lg flex items-center justify-center"
                                             />
+                                            <button
+                                              onClick={() => exportFormulaToExcel(result.formula!, `Logic-${result.goal.slice(0, 20)}.xlsx`)}
+                                              className="p-2 bg-green-800 hover:bg-green-700 text-green-100 rounded-lg transition-colors shadow-lg border border-green-700 flex items-center justify-center"
+                                              title="Export to Excel"
+                                            >
+                                              <FileSpreadsheet className="w-4 h-4" />
+                                            </button>
                                             {onDebug && (
                                                 <button
                                                     onClick={() => onDebug(result.formula!)}
-                                                    className="p-2 bg-[#217346] hover:bg-[#1a5c38] text-white rounded-lg transition-colors border border-[#1a5c38] shadow-lg"
+                                                    className="p-2 bg-[#217346] hover:bg-[#1a5c38] text-white rounded-lg transition-colors border border-[#1a5c38] shadow-lg flex items-center justify-center"
                                                     title="Analyze in Debugger"
                                                 >
                                                     <ExternalLink className="w-4 h-4" />

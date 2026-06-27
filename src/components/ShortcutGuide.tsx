@@ -41,37 +41,39 @@ export default function ShortcutGuide({ onClose }: ShortcutGuideProps) {
     >
       <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden min-h-[70vh] flex flex-col transition-colors">
         {/* Top Header Section */}
-        <div className="bg-[#217346] dark:bg-[#1a5c38] p-8 md:p-12 text-white relative transition-colors">
-          <div className="absolute top-8 right-8 flex gap-4">
-            <button 
-              onClick={() => setIsMac(!isMac)}
-              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition-all border border-white/10"
-            >
-              {isMac ? <Apple className="w-4 h-4" /> : <Laptop className="w-4 h-4" />}
-              <span className="text-xs font-bold uppercase tracking-wider">{isMac ? 'Switch to Windows' : 'Switch to Mac'}</span>
-            </button>
-            {onClose && (
-              <button 
-                onClick={onClose}
-                className="bg-white/10 hover:bg-white/20 p-2 rounded-xl transition-all border border-white/10"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-
-          <div className="flex items-center gap-4 mb-4">
-            <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md">
-              <Keyboard className="w-8 h-8 text-white" />
+        <div className="bg-[#217346] dark:bg-[#1a5c38] p-6 md:p-12 text-white relative transition-colors">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-4 mb-8">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md">
+                <Keyboard className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl md:text-3xl font-black tracking-tight">Shortcut Repository</h2>
+                <p className="text-green-100/80 text-sm font-medium tracking-wide">Accelerate your workflow with precision commands.</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-3xl font-black tracking-tight">Shortcut Repository</h2>
-              <p className="text-green-100/80 font-medium tracking-wide">Accelerate your workflow with precision commands.</p>
+            
+            <div className="flex items-center justify-between sm:justify-end gap-2">
+              <button 
+                onClick={() => setIsMac(!isMac)}
+                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-3 py-2 rounded-xl transition-all border border-white/10"
+              >
+                {isMac ? <Apple className="w-3.5 h-3.5" /> : <Laptop className="w-3.5 h-3.5" />}
+                <span className="text-[10px] font-bold uppercase tracking-wider">{isMac ? 'To Windows' : 'To Mac'}</span>
+              </button>
+              {onClose && (
+                <button 
+                  onClick={onClose}
+                  className="bg-white/10 hover:bg-white/20 p-2 rounded-xl transition-all border border-white/10"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
             </div>
           </div>
 
           {/* Search Input Container */}
-          <div className="mt-8 relative max-w-2xl group">
+          <div className="relative max-w-2xl group">
             <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
               <Search className="w-5 h-5 text-green-200" />
             </div>
@@ -80,8 +82,8 @@ export default function ShortcutGuide({ onClose }: ShortcutGuideProps) {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by action or keys (e.g., 'copy' or 'ctrl')..."
-              className="w-full bg-green-900/40 backdrop-blur-md border-2 border-white/20 rounded-2xl py-5 pl-14 pr-14 text-lg text-white placeholder:text-green-200/50 focus:border-white focus:bg-green-900/60 transition-all outline-none shadow-xl"
+              placeholder="Search by action or keys..."
+              className="w-full bg-green-900/40 backdrop-blur-md border-2 border-white/20 rounded-2xl py-4 md:py-5 pl-14 pr-14 text-base md:text-lg text-white placeholder:text-green-200/50 focus:border-white focus:bg-green-900/60 transition-all outline-none shadow-xl"
             />
             <div className="absolute right-4 inset-y-0 flex items-center">
               <ClearButton 
@@ -96,17 +98,17 @@ export default function ShortcutGuide({ onClose }: ShortcutGuideProps) {
         </div>
 
         {/* Categories Bar */}
-        <div className="px-8 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex items-center gap-6 overflow-x-auto no-scrollbar">
+        <div className="px-6 md:px-8 py-3 md:py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex flex-col md:flex-row md:items-center gap-4 md:gap-6 overflow-hidden">
           <div className="flex items-center gap-2 text-[#217346] dark:text-green-500 font-bold text-[10px] uppercase tracking-[0.2em] shrink-0">
             <Filter className="w-4 h-4" />
             Categories
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-2 px-2 md:mx-0 md:px-0">
             {['All', ...SHORTCUT_CATEGORIES].map((cat) => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat as any)}
-                className={`px-4 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
+                className={`px-4 py-1.5 rounded-full text-[10px] md:text-xs font-bold transition-all whitespace-nowrap ${
                   activeCategory === cat 
                     ? 'bg-[#217346] dark:bg-[#28a162] text-white shadow-lg shadow-[#217346]/20' 
                     : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-[#217346] dark:hover:border-green-500 hover:text-[#217346] dark:hover:text-green-500'
@@ -119,7 +121,7 @@ export default function ShortcutGuide({ onClose }: ShortcutGuideProps) {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-8 md:p-12">
+        <div className="flex-1 overflow-y-auto p-6 md:p-12">
           {filteredShortcuts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <AnimatePresence mode="popLayout">

@@ -12,10 +12,12 @@ import {
   Database,
   SquareCode,
   Zap,
+  FileSpreadsheet,
   X
 } from 'lucide-react';
 import { debugFormula, type FormulaDebugResult } from '../services/gemini';
 import { ClearButton, CopyButton } from './Common';
+import { exportFormulaToExcel } from '../lib/excelExport';
 
 interface FormulaDebuggerProps {
   initialFormula?: string;
@@ -81,20 +83,20 @@ export default function FormulaDebugger({ initialFormula, onClearInitial, onClos
     <div className="w-full max-w-5xl">
       <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden min-h-[60vh] flex flex-col transition-colors">
         {/* Header Section */}
-        <div className="bg-slate-900 dark:bg-slate-950 p-8 md:p-12 text-white relative overflow-hidden transition-colors">
-          <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
+        <div className="bg-slate-900 dark:bg-slate-950 p-6 md:p-12 text-white relative overflow-hidden transition-colors">
+          <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none hidden md:block">
             <Bug className="w-64 h-64" />
           </div>
           
           <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 md:mb-8">
               <div className="flex items-center gap-4">
-                <div className="bg-[#217346] p-3 rounded-2xl shadow-lg shadow-[#217346]/20">
-                  <Bug className="w-8 h-8 text-white" />
+                <div className="bg-[#217346] p-2 md:p-3 rounded-2xl shadow-lg shadow-[#217346]/20">
+                  <Bug className="w-6 h-6 md:w-8 md:h-8 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-3xl font-black tracking-tight">Formula Debugger</h2>
-                  <p className="text-slate-400 font-medium tracking-wide italic">Deconstruct complexity. Grasp the logic.</p>
+                  <h2 className="text-xl md:text-3xl font-black tracking-tight">Formula Debugger</h2>
+                  <p className="text-slate-400 text-xs md:text-sm font-medium tracking-wide italic">Deconstruct complexity. Grasp the logic.</p>
                 </div>
               </div>
               {onClose && (
@@ -103,24 +105,24 @@ export default function FormulaDebugger({ initialFormula, onClearInitial, onClos
                   className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all backdrop-blur-md"
                   aria-label="Close Debugger"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5 md:w-6 md:h-6" />
                 </button>
               )}
             </div>
 
-            <form onSubmit={handleSubmit} className="mt-8 relative max-w-3xl">
-              <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
-                <Search className="w-5 h-5 text-slate-500" />
+            <form onSubmit={handleSubmit} className="mt-4 md:mt-8 relative max-w-3xl">
+              <div className="absolute inset-y-0 left-0 pl-4 md:pl-6 flex items-center pointer-events-none">
+                <Search className="w-4 h-4 md:w-5 md:h-5 text-slate-500" />
               </div>
               <input
                 ref={inputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Paste a complex formula (e.g., =VLOOKUP(A1, B2:C10, 2, FALSE))..."
-                className="w-full bg-slate-800 border-2 border-slate-700 rounded-2xl py-5 pl-14 pr-48 text-lg text-white placeholder:text-slate-500 focus:border-[#217346] transition-all outline-none shadow-xl"
+                placeholder="Paste a complex formula..."
+                className="w-full bg-slate-800 border-2 border-slate-700 rounded-2xl py-4 md:py-5 pl-12 md:pl-14 pr-32 md:pr-48 text-sm md:text-lg text-white placeholder:text-slate-500 focus:border-[#217346] transition-all outline-none shadow-xl"
               />
-              <div className="absolute right-[8.5rem] inset-y-0 flex items-center">
+              <div className="absolute right-24 md:right-[8.5rem] inset-y-0 flex items-center">
                 <ClearButton 
                   isVisible={input.length > 0} 
                   onClick={() => {
@@ -132,16 +134,16 @@ export default function FormulaDebugger({ initialFormula, onClearInitial, onClos
               <button
                 type="submit"
                 disabled={loading || !input.trim()}
-                className="absolute right-3 inset-y-3 px-6 bg-[#217346] text-white rounded-xl font-bold flex items-center gap-2 hover:bg-[#1a5c38] transition-all disabled:opacity-50 min-w-[120px] justify-center"
+                className="absolute right-2 md:right-3 inset-y-2 md:inset-y-3 px-4 md:px-6 bg-[#217346] text-white rounded-xl font-bold flex items-center gap-2 hover:bg-[#1a5c38] transition-all disabled:opacity-50 min-w-[80px] md:min-w-[120px] justify-center text-xs md:text-base"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" />
                     <span className="hidden sm:inline">PROCESS...</span>
                   </>
                 ) : (
                   <>
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
                     <span className="hidden sm:inline">DEBUG</span>
                   </>
                 )}
@@ -151,7 +153,7 @@ export default function FormulaDebugger({ initialFormula, onClearInitial, onClos
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 p-8 md:p-12 bg-slate-50/50 dark:bg-slate-900/50 transition-colors">
+        <div className="flex-1 p-6 md:p-12 bg-slate-50/50 dark:bg-slate-900/50 transition-colors">
           <AnimatePresence mode="wait">
             {result ? (
               <motion.div
@@ -162,7 +164,17 @@ export default function FormulaDebugger({ initialFormula, onClearInitial, onClos
                 className="space-y-12"
               >
                 {/* Overall Logic */}
-                <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-sm border border-slate-100 dark:border-slate-800">
+                <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-sm border border-slate-100 dark:border-slate-800 relative">
+                  <div className="absolute top-6 right-8">
+                    <button
+                      onClick={() => exportFormulaToExcel(input, 'Debugged-Formula.xlsx')}
+                      className="flex items-center gap-2 bg-[#217346]/5 dark:bg-green-500/10 text-[#217346] dark:text-green-500 px-3 py-1.5 rounded-xl text-[10px] font-bold hover:bg-[#217346] hover:text-white transition-all border border-[#217346]/10"
+                      title="Export Input to Excel"
+                    >
+                      <FileSpreadsheet className="w-3.5 h-3.5" />
+                      EXPORT FORMULA
+                    </button>
+                  </div>
                   <div className="flex items-center gap-2 text-[#217346] dark:text-green-500 font-bold text-[10px] uppercase tracking-widest mb-4">
                     <CheckCircle2 className="w-4 h-4" />
                     Core Architecture Analysis
@@ -173,10 +185,10 @@ export default function FormulaDebugger({ initialFormula, onClearInitial, onClos
                 </div>
 
                 {/* Step by Step Breakdown */}
-                <div className="grid md:grid-cols-[1fr_350px] gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-8">
                   <div className="space-y-6">
                     <div className="flex items-center justify-between mb-2">
-                       <h3 className="text-slate-800 dark:text-white font-black text-xl flex items-center gap-2">
+                       <h3 className="text-slate-800 dark:text-white font-black text-lg md:text-xl flex items-center gap-2">
                          <SquareCode className="w-5 h-5 text-[#217346]" />
                          Component Breakdown
                        </h3>
@@ -188,15 +200,15 @@ export default function FormulaDebugger({ initialFormula, onClearInitial, onClos
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: idx * 0.05 }}
-                          className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all group"
+                          className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 md:p-5 shadow-sm hover:shadow-md transition-all group"
                         >
-                          <div className="flex items-start gap-4">
-                            <div className="mt-1 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors">
+                          <div className="flex items-start gap-3 md:gap-4">
+                            <div className="mt-1 p-1.5 md:p-2 rounded-lg bg-slate-50 dark:bg-slate-800 group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors">
                                {getRoleIcon(part.role)}
                             </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <code className="bg-slate-900 dark:bg-slate-800 text-green-400 px-2 py-0.5 rounded text-sm font-mono font-bold border border-white/5 flex items-center gap-2 group/code">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2 mb-1">
+                                <code className="bg-slate-900 dark:bg-slate-800 text-green-400 px-2 py-0.5 rounded text-xs md:text-sm font-mono font-bold border border-white/5 flex items-center gap-2 group/code max-w-full overflow-x-auto no-scrollbar">
                                   {part.segment}
                                   <CopyButton 
                                     text={part.segment} 
@@ -204,11 +216,11 @@ export default function FormulaDebugger({ initialFormula, onClearInitial, onClos
                                     iconSize={12}
                                   />
                                 </code>
-                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                                <span className="text-[9px] md:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">
                                   {part.role}
                                 </span>
                               </div>
-                              <p className="text-slate-600 dark:text-slate-300 text-sm font-medium leading-relaxed">
+                              <p className="text-slate-600 dark:text-slate-300 text-xs md:text-sm font-medium leading-relaxed">
                                 {part.explanation}
                               </p>
                             </div>
